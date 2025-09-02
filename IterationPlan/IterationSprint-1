@@ -1,1 +1,13 @@
+Sprint 1: Project Reassessment & Technical Foundation
+
+Weeks: 1–3 (Approx. Aug 26 - Sept 13)
+Syllabus Weeks: 1 & 2
+Focus: Reassess goals from previous course, finalize hardware selection, establish codebase, and achieve core sensor functionality.
+Deliverables / Checkpoints:
+Updated Project Proposal & Plan in Google Doc journal.
+GitHub Repository created (plantpulse-culmination) with organized folder structure.
+Code: Basic Arduino sketch successfully reading from all three sensors (DHT22, Soil Moisture, LDR) and printing values to Serial Monitor.
+Hardware: ESP32 and sensors wired correctly on a breadboard.
+Documentation: README.md started with project description and hardware list.
+Agile Assignment: First journal entry (Sprint 1 log) completed.
 
