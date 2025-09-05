@@ -1,0 +1,307 @@
+<!-- ============================
+ PlantPulse Dashboard
+ Author: Jessica Gomez Parral
+ Purpose: A web interface to display live data from an ESP32 (soil moisture, 
+ light, temperature, and humidity). The data updates every 3 seconds.
+
+ References included in comments for learning:
+ - Modern CSS Reset: https://piccalil.li/blog/a-modern-css-reset/
+ - CSS Grid Layout Guide: https://css-tricks.com/snippets/css/complete-guide-grid/
+ - CSS Flexbox Guide: https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+ - Fetch API Docs: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+ - setInterval Docs: https://developer.mozilla.org/en-US/docs/Web/API/setInterval
+ ============================ -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlantPulse Dashboard</title>
+
+    <!-- Import clean font from Google Fonts -->
+    <!-- Reference: https://fonts.google.com/specimen/Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Import Font Awesome for icons -->
+    <!-- Reference: https://fontawesome.com/icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /*  Modern CSS Reset
+           Helps normalize spacing, padding, and box sizing across browsers.
+           Reference: https://piccalil.li/blog/a-modern-css-reset/ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /*  General body styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /*  Layout container
+           Restricts width and centers content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-weight: 600;
+            color: #2e8b57; /* Plant-green color */
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            font-weight: 300;
+        }
+
+        /*  Status bar card */
+        .status-bar {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        #last-updated {
+            font-style: italic;
+        }
+
+        /*  Dashboard layout using CSS Grid
+           Reference: https://css-tricks.com/snippets/css/complete-guide-grid/ */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+
+        /*  Data card using Flexbox
+           Reference: https://css-tricks.com/snippets/css/a-guide-to-flexbox/ */
+        .data-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .soil-icon { color: #8B4513; } 
+        .light-icon { color: #FFD700; } 
+        .temp-icon { color: #DC143C; } 
+        .humidity-icon { color: #4169E1; } 
+
+        .card-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .card-unit {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        /*  Alert cards */
+        .alert {
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            display: none; /* Hidden by default */
+        }
+
+        .alert-warning {
+            background-color: #FFF3CD;
+            color: #856404;
+            border-left: 4px solid #FFC107;
+        }
+
+        .alert-info {
+            background-color: #D1ECF1;
+            color: #0C5460;
+            border-left: 4px solid #0DCAF0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        /*  Loading animation
+           Simple pulse effect to show waiting state */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .loading {
+            animation: pulse 1.5s infinite;
+            color: #ccc !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-seedling"></i> PlantPulse Dashboard</h1>
+            <p class="subtitle">Live monitoring for your smart garden</p>
+        </header>
+
+        <div class="status-bar">
+            <p>System Status: <span id="connection-status">Connecting...</span> | Last Updated: <span id="last-updated">--</span></p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Soil Moisture Card -->
+            <div class="data-card">
+                <div class="card-icon soil-icon"><i class="fas fa-tint"></i></div>
+                <div class="card-label">Soil Moisture</div>
+                <div class="card-value" id="soil-value">--</div>
+                <div class="card-unit">analog reading</div>
+                <div id="soil-alert" class="alert alert-warning">Soil is getting dry!</div>
+            </div>
+
+            <!-- Light Level Card -->
+            <div class="data-card">
+                <div class="card-icon light-icon"><i class="fas fa-sun"></i></div>
+                <div class="card-label">Light Level</div>
+                <div class="card-value" id="light-value">--</div>
+                <div class="card-unit">analog reading</div>
+                <div id="light-alert" class="alert alert-info">Plant needs more light!</div>
+            </div>
+
+            <!-- Temperature Card (now displays °F) -->
+            <div class="data-card">
+                <div class="card-icon temp-icon"><i class="fas fa-thermometer-half"></i></div>
+                <div class="card-label">Temperature</div>
+                <div class="card-value" id="temp-value">--</div>
+                <div class="card-unit">°F</div> <!-- changed from °C to °F -->
+            </div>
+
+            <!-- Humidity Card -->
+            <div class="data-card">
+                <div class="card-icon humidity-icon"><i class="fas fa-cloud-rain"></i></div>
+                <div class="card-label">Humidity</div>
+                <div class="card-value" id="hum-value">--</div>
+                <div class="card-unit">%</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>PlantPulse System | Data updates every 3 seconds</p>
+        </div>
+    </div>
+
+    <script>
+        //  Replace with  ESP32's IP (printed in Serial Monitor)
+        const API_URL = 'http://192.168.1.73/api/sensordata';
+
+        // Elements to update
+        const soilElement = document.getElementById('soil-value');
+        const lightElement = document.getElementById('light-value');
+        const tempElement = document.getElementById('temp-value');
+        const humElement = document.getElementById('hum-value');
+        const lastUpdatedElement = document.getElementById('last-updated');
+        const soilAlert = document.getElementById('soil-alert');
+        const lightAlert = document.getElementById('light-alert');
+        const connectionStatus = document.getElementById('connection-status');
+
+        // Update the clock with the current time
+        function updateTime() {
+            const now = new Date();
+            lastUpdatedElement.textContent = now.toLocaleTimeString();
+        }
+
+        // Show alerts if thresholds are crossed
+        function checkAlerts(soil, light) {
+            if (soil < 2000) soilAlert.style.display = 'block';
+            else soilAlert.style.display = 'none';
+
+            if (light < 500) lightAlert.style.display = 'block';
+            else lightAlert.style.display = 'none';
+        }
+
+        // NOTE: Your ESP32 now sends temperature in °F already.
+        // If in the future you switch the ESP32 back to °C, you can convert like this:
+        // function cToF(c) { return (c * 9/5) + 32; }
+
+        //  Fetch API (Reference: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+        async function fetchData() {
+            try {
+                [soilElement, lightElement, tempElement, humElement].forEach(el => el.classList.add('loading'));
+
+                const response = await fetch(API_URL);
+                const data = await response.json();
+
+                // Update UI values (temperature is already °F from the API)
+                soilElement.textContent = data.soil_moisture;
+                lightElement.textContent = data.light_level;
+                tempElement.textContent = Number(data.temperature).toFixed(1); // °F
+                humElement.textContent = Number(data.humidity).toFixed(1);
+
+                [soilElement, lightElement, tempElement, humElement].forEach(el => el.classList.remove('loading'));
+
+                checkAlerts(data.soil_moisture, data.light_level);
+                connectionStatus.textContent = "✅ Connected";
+                connectionStatus.style.color = "green";
+                updateTime();
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                connectionStatus.textContent = "❌ Connection Error";
+                connectionStatus.style.color = "red";
+            }
+        }
+
+        // setInterval (Reference: https://developer.mozilla.org/en-US/docs/Web/API/setInterval)
+        fetchData(); // initial fetch
+        setInterval(fetchData, 3000); // update every 3s
+
+        updateTime();
+        setInterval(updateTime, 1000); // live clock
+    </script>
+</body>
+</html>
