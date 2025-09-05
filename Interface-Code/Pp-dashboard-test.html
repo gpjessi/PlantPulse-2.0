@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlantPulse Dashboard</title>
+    <style>
+        /* The styling is kept minimalist and directly embedded for simplicity.
+          General CSS best practices were followed as referenced from:
+          https://www.webfx.com/blog/web-design/20-html-best-practices-you-should-follow/
+        */
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        h1 { color: #2e8b57; }
+        p { font-size: 1.2em; }
+        span { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>PlantPulse Live Data</h1>
+    <p>Soil Moisture: <span id="soil">--</span></p>
+    <p>Light Level: <span id="light">--</span></p>
+    <p>Temperature: <span id="temp">--</span> °C</p>
+    <p>Humidity: <span id="hum">--</span> %</p>
+
+    <script>
+        // Jessica Gomez first dashboard test
+        //  ESP32's IP ADDRESS
+        const API_URL = 'http://192.168.1.73/api/sensordata';
+
+        /* This script fetches sensor data asynchronously and updates the page.
+          General JavaScript best practices and code style were referenced from:
+          - https://developer.mozilla.org/en-US/docs/MDN/Writing_guidelines/Code_style_guide
+          - https://radixweb.com/blog/javascript-practices-and-tools
+        */
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+
+                // Update the HTML with the new data
+                document.getElementById('soil').textContent = data.soil_moisture;
+                document.getElementById('light').textContent = data.light_level;
+                document.getElementById('temp').textContent = data.temperature.toFixed(1);
+                document.getElementById('hum').textContent = data.humidity.toFixed(1);
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // Optionally: Handle the UI to show an error state
+            }
+        }
+
+        // Fetch data immediately when the page loads
+        fetchData();
+
+        // Then, set up a timer to fetch new data every 3 seconds (3000 milliseconds)
+        setInterval(fetchData, 3000);
+    </script>
+</body>
+</html>
