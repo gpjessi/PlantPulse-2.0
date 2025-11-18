@@ -1,2 +1,2 @@
 # PlantPulse-2.0
-Smart plant system
+PlantPulse is a smart plant-monitoring system designed to help home growers and plant parents understand their plant’s needs in real time. Using an ESP32 microcontroller and three sensors (soil moisture, light, and temperature/humidity), the system collects environmental data and sends it to a custom web dashboard. The goal is to make plant care simple, clear, and based on real information so people can understand what their plants need.
