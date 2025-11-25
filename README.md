@@ -26,4 +26,25 @@ Sensors → ESP32 → Web Dashboard → User → Care Action
 - Agile reports  
 - Iteration planning  
 - System diagram  
-- Organized, professional project structure  
+- Organized, professional project structure
+
+  ##  Tech Stack
+
+### **Hardware**
+- **ESP32-WROOM-32** — main microcontroller  
+- **DHT22** — temperature & humidity sensor  
+- **GL5516 LDR** — light sensor  
+- **Capacitive Soil Moisture Sensor v1.2** — moisture measurement  
+- **USB-to-Data Cable** — for flashing + power  
+- **Breadboard & jumper wires** — prototyping setup  
+
+---
+
+### **Software**
+- **Arduino IDE** — writing and uploading ESP32 firmware  
+- **PlatformIO** (optional) — advanced embedded development  
+- **HTML / CSS / JavaScript** — web interface for dashboard  
+- **Git & GitHub** — version control and project organization  
+- **Figma** — UI/UX design and diagrams  
+- **Google Docs** — reports, iteration plans, and project documentation  
+
