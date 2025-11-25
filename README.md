@@ -5,40 +5,25 @@ PlantPulse is a smart plant-monitoring system designed to help home growers and 
 PlantPulse collects environmental data from three sensors, sends it to an ESP32, and displays it on a lightweight web dashboard. Users interpret the data and take positive care actions.
 Sensors → ESP32 → Web Dashboard → User → Care Action
 
-Features (Current)
+##  Features (Current)
 
-✔ Real-time environment monitoring
-Soil Moisture Sensor (V1.2)
-DHT22 Temperature & Humidity Sensor
-GL5516 LDR Light Sensor\
+### ✔ Real-time environment monitoring
+- Soil Moisture Sensor (V1.2)  
+- DHT22 Temperature & Humidity Sensor  
+- GL5516 LDR Light Sensor  
 
-✔ ESP32 firmware
-Reads, processes, and formats sensor data
-Sends values to dashboard
-Supports future data-logging expansion
+### ✔ ESP32 firmware
+- Reads, processes, and formats sensor data  
+- Sends values to the dashboard  
+- Ready for future data-logging expansion  
 
-✔ Web Dashboard
-HTML/CSS/JS
-Displays moisture %, temperature, humidity, and light level
-Clean UI built from scratch
-Ready for calibration tuning and styling improvements
+### ✔ Web dashboard (HTML/CSS/JS)
+- Displays moisture %, temperature, humidity, and light level  
+- Clean UI built from scratch  
+- Ready for calibration tuning and visual improvements  
 
-✔ Clear documentation
-Agile reports
-Iteration planning
-System diagram
-Organized project structure
-
-
-🔧 Tech Stack
-Hardware
-ESP32-WROOM-32
-DHT22 (Temperature & Humidity)
-GL5516 LDR (Light Sensor)
-Capacitive Soil Moisture Sensor V1.2
-USB-to-Data Cable
-Software
-Arduino IDE / PlatformIO
-HTML / CSS / JavaScript
-Git + GitHub
-Figma (UI/UX and diagrams)
+### ✔ Documentation
+- Agile reports  
+- Iteration planning  
+- System diagram  
+- Organized, professional project structure  
