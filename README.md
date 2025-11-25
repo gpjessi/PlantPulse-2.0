@@ -29,7 +29,8 @@ Iteration planning
 System diagram
 Organized project structure
 
-Tech Stack
+
+🔧 Tech Stack
 Hardware
 ESP32-WROOM-32
 DHT22 (Temperature & Humidity)
@@ -37,7 +38,6 @@ GL5516 LDR (Light Sensor)
 Capacitive Soil Moisture Sensor V1.2
 USB-to-Data Cable
 Software
-
 Arduino IDE / PlatformIO
 HTML / CSS / JavaScript
 Git + GitHub
