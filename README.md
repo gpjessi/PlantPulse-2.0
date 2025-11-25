@@ -37,6 +37,7 @@ GL5516 LDR (Light Sensor)
 Capacitive Soil Moisture Sensor V1.2
 USB-to-Data Cable
 Software
+
 Arduino IDE / PlatformIO
 HTML / CSS / JavaScript
 Git + GitHub
