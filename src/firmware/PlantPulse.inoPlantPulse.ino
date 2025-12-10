@@ -1,5 +1,5 @@
 // ==============================
-// PlantPulse API (no calibration)
+// PlantPulse API 
 // - Serves /api/sensordata (JSON)
 // - Temperature in °F (set readTemperature(false) for °C)
 // In colaboration with Chatgpt
@@ -18,8 +18,8 @@ const char* password = "password";
 #define SOIL_PIN 33
 
 // --- Fixed calibration constants  ---
-int soilDryValue   = 420;   // DRY  (soilMax)
-int soilWetValue   = 150;   // WET  (soilMin)
+int soilDryValue   = 2600;   // DRY  (soilMax)
+int soilWetValue   = 900;   // WET  (soilMin)
 int ldrDarkValue   = 0;     // DARK (ldrMin)
 int ldrBrightValue = 3797;  // BRIGHT (ldrMax)
 
