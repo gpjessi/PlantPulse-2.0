@@ -1,0 +1,806 @@
+<!-- 
+PlantPulse Dashboard
+Developed by Jessica Gomez Parral
+Some code written and refined with assistance from OpenAI’s ChatGPT.
+-->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>PlantPulse</title>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --green-1:#0e6b3a;
+      --green-2:#2e8b57;
+      --green-3:#a8d5b7;
+      --leaf:#0b3d2e;
+      --paper:#ffffff;
+      --ink:#333;
+      --mute:#777;
+      --shadow:0 6px 16px rgba(0,0,0,.10);
+      --radius:16px;
+    }
+    html,body{height:100%}
+    body{
+      font-family:'Poppins',sans-serif; color:var(--ink);
+      background:
+        radial-gradient(60% 80% at 20% 10%, #eaf7ef 0%, #d6efe1 35%, #c3e6d3 60%, #b8e0cc 100%) fixed;
+      padding: 20px;
+    }
+    .container{max-width:1200px;margin:0 auto}
+
+    /* ---------- NAV (simple top bar) ---------- */
+    .topbar{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    .brand{
+      display:flex;align-items:center;gap:10px;font-weight:700;color:var(--leaf)
+    }
+    .brand i{color:var(--green-2)}
+    .crumbs{margin-left:auto;color:var(--mute);font-size:.9rem}
+
+    /* ---------- SECTIONS (simple SPA) ---------- */
+    section{display:none}
+    section.active{display:block}
+
+    /* ---------- LANDING ---------- */
+    .landing{
+      background: linear-gradient(135deg, #e9f7ee 0%, #cfead9 50%, #b9e0cf 100%);
+      border-radius: 28px; box-shadow: var(--shadow);
+      padding: clamp(24px, 6vw, 64px);
+      position: relative; overflow: hidden; min-height: 58vh;
+    }
+    .landing h1{
+      font-size: clamp(2.2rem, 7vw, 5rem);
+      line-height: 1.0; color:#073b2c; letter-spacing:.5px
+    }
+    .landing p{margin-top:14px;color:#23483c;font-weight:300;font-size:clamp(1rem,2.2vw,1.25rem)}
+    .cta{
+      margin-top:28px; display:inline-flex; align-items:center; gap:10px;
+      border:none; border-radius: 999px; padding: 14px 22px; font-size:1.05rem;
+      background: #0f5234; color:white; cursor:pointer; box-shadow: var(--shadow)
+    }
+    .cta:hover{transform:translateY(-1px)}
+    /* layered leaves */
+    .leafs, .leafs:before, .leafs:after{
+      position:absolute; right:-12%; bottom:-12%; width:60vmin; height:60vmin; border-radius:50%;
+      background: radial-gradient(closest-side, #0b3d2e, transparent 70%);
+      filter: blur(18px); opacity:.12; pointer-events:none;
+    }
+    .leafs:before{content:""; right:14%; bottom:6%; width:50vmin; height:50vmin; opacity:.15}
+    .leafs:after{content:""; right:-2%; bottom:22%; width:40vmin; height:40vmin; opacity:.18}
+
+    /* ---------- PLANT PICKER ---------- */
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+    .card{
+      background:var(--paper); border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:22px; display:flex; flex-direction:column; gap:12px;
+    }
+    .card h3{color:var(--green-2);font-size:1.2rem}
+    .tag{font-size:.8rem;color:#0b3d2e;background:#dbf2e5;padding:6px 10px;border-radius:999px;display:inline-block}
+    .go{
+      margin-top:auto; align-self:flex-start; border:1px solid #cde6d8; color:#0f5234;
+      background:#e8f7ee; border-radius:999px; padding:10px 14px; cursor:pointer
+    }
+    .go:hover{background:#dff4e8}
+
+    /* ---------- DASHBOARD ---------- */
+    header{ text-align:center; margin-bottom: 1.2rem; }
+    h1.title{ font-weight:600; color:var(--green-2); font-size:2.4rem; margin-bottom:.4rem }
+    .subtitle{ color:#666; font-weight:300 }
+
+    .status-bar{
+      background:#fff;border-radius:12px;padding:14px;margin-bottom:1.2rem;
+      box-shadow:var(--shadow);text-align:center;font-size:.9rem;color:#666
+    }
+    #last-updated{font-style:italic}
+
+    .dashboard-grid{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:20px;margin-bottom:1.2rem
+    }
+    .data-card{
+      background:#fff;border-radius:var(--radius);padding:25px;display:flex;flex-direction:column;
+      align-items:center;text-align:center;box-shadow:var(--shadow);transition:transform .3s ease
+    }
+    .data-card:hover{transform:translateY(-5px)}
+    .card-icon{font-size:2.5rem;margin-bottom:15px}
+    .soil-icon{color:#8B4513}
+    .light-icon{color:#FFD700}
+    .temp-icon{color:#DC143C}
+    .humidity-icon{color:#4169E1}
+    .card-label{font-size:.9rem;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:8px}
+    .card-value{font-size:2.2rem;font-weight:600;margin-bottom:5px}
+    .card-unit{font-size:.9rem;color:#888}
+    .alert{padding:12px;border-radius:12px;margin-top:10px;font-size:.85rem;display:none}
+    .alert-warning{background:#FFF3CD;color:#856404;border-left:4px solid #FFC107}
+    .alert-info{background:#D1ECF1;color:#0C5460;border-left:4px solid #0DCAF0}
+
+    .footer{text-align:center;margin-top:1.2rem;color:#888;font-size:.8rem}
+    @keyframes pulse{0%{opacity:1}50%{opacity:.5}100%{opacity:1}}
+    .loading{animation:pulse 1.5s infinite;color:#ccc!important}
+
+    .toolbar{display:flex;gap:10px;margin:.4rem 0 1rem}
+    .link{border:none;background:transparent;color:#0f5234;cursor:pointer}
+    .link:hover{text-decoration:underline}
+
+    /* ---------- MOOD CARD ---------- */
+    .mood-card{
+      background:#fff;
+      border-radius:var(--radius);
+      padding:22px;
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:8px;
+      margin-bottom:1rem;
+    }
+
+    .mood-header{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:1.1rem;
+      font-weight:500;
+      color:#0b3d2e;
+    }
+
+    #mood-emoji{
+      font-size:2rem;
+    }
+
+    #mood-title{
+      font-size:.95rem;
+      font-weight:600;
+    }
+
+    #mood-message{
+      font-size:.9rem;
+      color:#555;
+    }
+
+    .mood-happy{
+      box-shadow:0 0 24px rgba(46,139,87,0.35);
+    }
+    .mood-thirsty{
+      box-shadow:0 0 24px rgba(255,193,7,0.45);
+    }
+    .mood-sleepy{
+      box-shadow:0 0 24px rgba(108,117,125,0.45);
+    }
+    .mood-stressed{
+      box-shadow:0 0 24px rgba(220,53,69,0.45);
+    }
+
+    .plant-name-edit{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:.9rem;
+      margin-top:6px;
+    }
+
+    .plant-name-edit input{
+      border-radius:999px;
+      border:1px solid #cde6d8;
+      padding:4px 10px;
+      font-size:.85rem;
+    }
+
+    .plant-name-edit button{
+      border:none;
+      border-radius:999px;
+      padding:5px 10px;
+      cursor:pointer;
+      background:#0f5234;
+      color:#fff;
+      font-size:.8rem;
+    }
+
+    .plant-name-edit button:hover{
+      opacity:.9;
+    }
+
+    .checkin{
+      margin-top:8px;
+      font-size:.85rem;
+      color:#555;
+    }
+
+    .checkin button{
+      margin-top:6px;
+      border:none;
+      border-radius:999px;
+      padding:6px 10px;
+      cursor:pointer;
+      background:#0f5234;
+      color:#fff;
+      font-size:.8rem;
+    }
+    .checkin button:hover{
+      opacity:.9;
+    }
+
+    #checkin-log{
+      margin-top:6px;
+      font-size:.8rem;
+      color:#666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand"><i class="fas fa-seedling"></i> PlantPulse</div>
+      <div class="crumbs" id="crumbs">Home</div>
+    </div>
+
+    <!-- ============ SECTION: LANDING ============ -->
+    <section id="landing" class="landing active" aria-labelledby="hero-title">
+      <h1 id="hero-title">Grow with Peace of Mind</h1>
+      <p>Monitor moisture, light, temperature, and humidity in real time. Pick a plant to see live data.</p>
+      <button class="cta" onclick="goto('plants')">
+        <i class="fas fa-play"></i> Start
+      </button>
+      <div class="leafs"></div>
+    </section>
+
+    <!-- ============ SECTION: PLANT PICKER ============ -->
+    <section id="plants" class="plants">
+      <header style="text-align:center;margin-bottom:1.2rem">
+        <h1 class="title"><i class="fas fa-leaf"></i> Choose a Plant</h1>
+        <p class="subtitle">Each plant has its own profile</p>
+      </header>
+
+      <div class="grid" id="plant-grid">
+        <!-- Cards are injected by JS from the plants[] list -->
+      </div>
+
+      <div class="toolbar" style="justify-content:center">
+        <button class="link" onclick="goto('landing')">← Back to Home</button>
+      </div>
+    </section>
+
+    <!-- ============ SECTION: DASHBOARD (per plant) ============ -->
+    <section id="dashboard">
+      <header>
+        <h1 class="title" id="plant-title"><i class="fas fa-seedling"></i> PlantPulse Dashboard</h1>
+        <p class="subtitle" id="plant-subtitle">Live monitoring for your smart garden</p>
+      </header>
+
+      <div class="toolbar">
+        <button class="link" onclick="goto('plants')">← All Plants</button>
+        <span class="tag" id="plant-tag">Profile</span>
+      </div>
+
+      <!-- Mood + Name + Check-in -->
+      <div class="mood-card" id="mood-card">
+        <div class="mood-header">
+          <span id="mood-emoji">🌱</span>
+          <div>
+            <div id="mood-title">Getting to know your plant…</div>
+            <div id="mood-message">Live data will help PlantPulse understand how your plant feels.</div>
+          </div>
+        </div>
+
+        <div class="plant-name-edit">
+          <span>Plant name:</span>
+          <input id="plant-name-input" type="text" placeholder="My basil" />
+          <button id="save-name-btn">Save</button>
+        </div>
+
+        <div class="checkin">
+          <div>Daily check-in: <strong>"How do I look today?"</strong></div>
+          <button id="checkin-btn">Ask Plant</button>
+          <div id="checkin-log"></div>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <p>
+          <span>System Status: <span id="connection-status">Connecting...</span></span>
+          &nbsp;|&nbsp; <span>Last Updated: <span id="last-updated">--</span></span>
+        </p>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Soil -->
+        <div class="data-card">
+          <div class="card-icon soil-icon"><i class="fas fa-tint"></i></div>
+          <div class="card-label">Soil Moisture</div>
+          <div class="card-value" id="soil-value">--</div>
+          <div class="card-unit">%</div>
+          <div id="soil-alert" class="alert alert-warning">Soil is getting dry!</div>
+        </div>
+
+        <!-- Light -->
+        <div class="data-card">
+          <div class="card-icon light-icon"><i class="fas fa-sun"></i></div>
+          <div class="card-label">Light Level</div>
+          <div class="card-value" id="light-value">--</div>
+          <div class="card-unit">%</div>
+          <div id="light-alert" class="alert alert-info">Plant needs more light!</div>
+        </div>
+
+        <!-- Temp -->
+        <div class="data-card">
+          <div class="card-icon temp-icon"><i class="fas fa-thermometer-half"></i></div>
+          <div class="card-label">Temperature</div>
+          <div class="card-value" id="temp-value">--</div>
+          <div class="card-unit">°F</div>
+        </div>
+
+        <!-- Humidity -->
+        <div class="data-card">
+          <div class="card-icon humidity-icon"><i class="fas fa-cloud-rain"></i></div>
+          <div class="card-label">Humidity</div>
+          <div class="card-value" id="hum-value">--</div>
+          <div class="card-unit">%</div>
+        </div>
+
+        <!-- Plant Voice / Message -->
+        <div class="data-card" id="plant-voice-card" style="align-items:flex-start; text-align:left;">
+          <div class="card-icon"><i class="fas fa-comment-dots"></i></div>
+          <div class="card-label">Plant Message</div>
+          <p id="plant-message" style="margin-top:10px; font-size:.95rem; color:#444;">
+            Hi, I’m just settling in and getting to know my soil and light. 🌱
+          </p>
+        </div>
+
+        <!-- Care Tips Panel -->
+        <div class="data-card" id="care-card" style="align-items:flex-start; text-align:left;">
+          <div class="card-icon"><i class="fas fa-heart"></i></div>
+          <div class="card-label">Care Tips</div>
+          <ul id="care-tips" style="margin-top:10px; font-size:.9rem; color:#555; list-style:disc; padding-left:18px;">
+            <li>Waiting for live data…</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>PlantPulse System • Data updates every 3 seconds</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    /* ------------------ SIMPLE SPA ROUTER ------------------ */
+    const views = ["landing","plants","dashboard"];
+
+    function goto(id){
+      // Show only the selected section
+      views.forEach(v => document.getElementById(v).classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+
+      // Update breadcrumb text
+      document.getElementById('crumbs').textContent =
+        id === "landing" ? "Home" :
+        id === "plants" ? "Home › Plants" :
+        `Home › Plants › ${activePlant?.name ?? ""}`;
+
+      // Start or stop polling depending on view
+      if(id === "dashboard"){ startPolling(); }
+      else { stopPolling(); }
+    }
+
+    /* ------------------ PLANT LIST ------------------ */
+    const plants = [
+      {
+        id:"basil",
+        name:"Basil",
+        tag:"Herb • Indoor",
+        api:"http://192.168.4.1/api/sensordata"
+      },
+      {
+        id:"demo",
+        name:"Demo Plant",
+        tag:"Houseplant • Sample",
+        api:"http://192.168.4.1/api/sensordata"
+      }
+    ];
+
+    const grid = document.getElementById('plant-grid');
+
+    // Dynamically create cards for each plant
+    plants.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <h3><i class="fas fa-leaf"></i> ${p.name}</h3>
+        <span class="tag">${p.tag}</span>
+        <p style="color:#666;font-size:.9rem">
+          Live sensor profile with moisture, light, temperature, and humidity.
+        </p>
+        <button class="go">Open profile</button>
+      `;
+      card.querySelector('.go').addEventListener('click', () => openPlant(p.id));
+      grid.appendChild(card);
+    });
+
+    let activePlant = null;
+
+    function openPlant(id){
+      // Set active plant based on selected card
+      activePlant = plants.find(p => p.id === id);
+
+      // Update labels in the dashboard header
+      document.getElementById('plant-title').innerHTML =
+        `<i class="fas fa-seedling"></i> ${activePlant.name}`;
+      document.getElementById('plant-subtitle').textContent = 'Live monitoring';
+      document.getElementById('plant-tag').textContent = activePlant.tag;
+
+      // Load custom name if it exists
+      loadPlantName();
+
+      goto('dashboard');
+    }
+
+    /* ------------------ DASHBOARD ELEMENT REFERENCES ------------------ */
+    const soilElement  = document.getElementById('soil-value');
+    const lightElement = document.getElementById('light-value');
+    const tempElement  = document.getElementById('temp-value');
+    const humElement   = document.getElementById('hum-value');
+    const lastUpdatedElement = document.getElementById('last-updated');
+    const soilAlert = document.getElementById('soil-alert');
+    const lightAlert = document.getElementById('light-alert');
+    const connectionStatus = document.getElementById('connection-status');
+
+    const careTipsList = document.getElementById("care-tips");
+    const plantMessageElement = document.getElementById("plant-message");
+
+    // Mood + name + check-in elements
+    const moodCard      = document.getElementById('mood-card');
+    const moodEmojiEl   = document.getElementById('mood-emoji');
+    const moodTitleEl   = document.getElementById('mood-title');
+    const moodMessageEl = document.getElementById('mood-message');
+    const plantNameInput = document.getElementById('plant-name-input');
+    const saveNameBtn    = document.getElementById('save-name-btn');
+    const checkinBtn     = document.getElementById('checkin-btn');
+    const checkinLog     = document.getElementById('checkin-log');
+
+    /* ------------------ BASIL CARE THRESHOLD RULES ------------------ */
+    const BASIL_RULES = {
+      soil:  { low: 30, high: 80 },        // Ideal soil moisture range (%)
+      light: { low: 40 },                  // % of maximum light for healthy growth
+      temp:  { low: 65, high: 80 },        // Ideal temperature range (°F)
+      hum:   { low: 40, high: 70 }         // Ideal humidity range (%)
+    };
+
+    /* ------------------ DEMO DATA GENERATOR ------------------ */
+    function getDemoData() {
+      const baseSoil = 55;   // %
+      const baseLight = 45;  // %
+      const baseTemp = 72;   // °F
+      const baseHum  = 55;   // %
+
+      function jitter(base, maxDelta = 5) {
+        const delta = (Math.random() * maxDelta * 2) - maxDelta;
+        return base + delta;
+      }
+
+      return {
+        soil_moisture: jitter(baseSoil, 10),
+        light_level:   jitter(baseLight, 15),
+        temperature:   jitter(baseTemp, 4),
+        humidity:      jitter(baseHum, 8)
+      };
+    }
+
+    /* ------------------ CARE TIPS LOGIC ------------------ */
+    function updateCareTips(data){
+      if(!data) return;
+
+      const tips = [];
+
+      const soil = Number(data.soil_moisture);
+      const light = Number(data.light_level);
+      const temp  = Number(data.temperature);
+      const hum   = Number(data.humidity);
+
+      /* Soil Moisture Tips */
+      if(soil < BASIL_RULES.soil.low){
+        tips.push("Soil is dry. Water your basil within the next 6–8 hours.");
+      } 
+      else if(soil > BASIL_RULES.soil.high){
+        tips.push("Soil is very wet. Allow it to dry slightly to prevent root rot.");
+      } 
+      else {
+        tips.push("Soil moisture is healthy. Keep following your current watering routine.");
+      }
+
+      /* Light Level Tips */
+      if(light < BASIL_RULES.light.low){
+        tips.push("Light level is low. Move the plant closer to a window or use a grow light.");
+      } 
+      else {
+        tips.push("Light level is good for daytime growth.");
+      }
+
+      /* Temperature Tips */
+      if(temp < BASIL_RULES.temp.low){
+        tips.push("Temperature is a bit cool. Basil prefers a warmer spot.");
+      } 
+      else if(temp > BASIL_RULES.temp.high){
+        tips.push("Temperature is warm. Avoid placing the plant near heaters.");
+      } 
+      else {
+        tips.push("Temperature is perfect for basil.");
+      }
+
+      /* Humidity Tips */
+      if(hum < BASIL_RULES.hum.low){
+        tips.push("Air is dry. Light misting or a nearby water tray can help.");
+      } 
+      else if(hum > BASIL_RULES.hum.high){
+        tips.push("Humidity is high. Ensure airflow to prevent mold.");
+      } 
+      else {
+        tips.push("Humidity is in a comfortable range.");
+      }
+
+      careTipsList.innerHTML = "";
+      tips.forEach(t => {
+        const li = document.createElement("li");
+        li.textContent = t;
+        careTipsList.appendChild(li);
+      });
+    }
+
+    /* ------------------ PLANT MESSAGE LOGIC ------------------ */
+    function updatePlantMessage(data){
+      if (!data || !activePlant || !plantMessageElement) return;
+
+      const soil  = Number(data.soil_moisture);
+      const light = Number(data.light_level);
+      const temp  = Number(data.temperature);
+      const hum   = Number(data.humidity);
+
+      // If everything is missing / NaN, keep a soft default message
+      if (
+        Number.isNaN(soil) &&
+        Number.isNaN(light) &&
+        Number.isNaN(temp) &&
+        Number.isNaN(hum)
+      ) {
+        plantMessageElement.textContent =
+          "I’m still waking up and syncing with my sensors. Check back in a moment. 🌱";
+        return;
+      }
+
+      let message = "";
+
+      // Soil first (most “emotional”)
+      if (!Number.isNaN(soil) && soil < BASIL_RULES.soil.low) {
+        message = `Hey, it’s me, ${activePlant.name}. I’m starting to feel a bit thirsty. Could you water me soon? 💧`;
+      } else if (!Number.isNaN(soil) && soil > BASIL_RULES.soil.high) {
+        message = "I’m soaked right now. Let my roots breathe a little before the next watering, please. 🌊";
+      }
+
+      // Light
+      else if (!Number.isNaN(light) && light < BASIL_RULES.light.low) {
+        message = "I’m craving a bit more light. Maybe we could move closer to the window together? ☀️";
+      } else if (!Number.isNaN(light) && light >= BASIL_RULES.light.low + 30) {
+        message = "The light feels perfect on my leaves right now. Thanks for this spot. 🌿";
+      }
+
+      // Temperature
+      else if (!Number.isNaN(temp) && temp < BASIL_RULES.temp.low) {
+        message = "Brrr… it’s a little chilly. Could we find a warmer place for me? ❄️";
+      } else if (!Number.isNaN(temp) && temp > BASIL_RULES.temp.high) {
+        message = "It’s pretty warm here. Let’s avoid heaters or hot windows if we can. 🔥";
+      }
+
+      // Humidity
+      else if (!Number.isNaN(hum) && hum < BASIL_RULES.hum.low) {
+        message = "The air is a bit dry. A little mist or a nearby water tray would feel nice. 💦";
+      } else if (!Number.isNaN(hum) && hum > BASIL_RULES.hum.high) {
+        message = "It’s very humid. Just keep some air moving so I stay comfy. 🌬️";
+      }
+
+      // If everything is in a good range
+      else {
+        message = "I’m feeling really good right now. Thanks for taking such thoughtful care of me. 💚";
+      }
+
+      plantMessageElement.textContent = message;
+    }
+
+    /* ------------------ MOOD / EMOJI LOGIC ------------------ */
+    function getMoodFromData(data){
+      const soil = Number(data.soil_moisture);
+      const light = Number(data.light_level);
+      const temp  = Number(data.temperature);
+
+      if (soil >= BASIL_RULES.soil.low && soil <= BASIL_RULES.soil.high &&
+          light >= BASIL_RULES.light.low &&
+          temp >= BASIL_RULES.temp.low && temp <= BASIL_RULES.temp.high) {
+        return {
+          id: "happy",
+          emoji: "😊",
+          title: "Your plant feels happy",
+          message: "Moisture, light, and temperature are all in a comfortable range."
+        };
+      }
+
+      if (soil < BASIL_RULES.soil.low){
+        return {
+          id: "thirsty",
+          emoji: "🥵",
+          title: "Your plant feels thirsty",
+          message: "Soil is on the dry side. Consider watering soon."
+        };
+      }
+
+      if (light < BASIL_RULES.light.low){
+        return {
+          id: "sleepy",
+          emoji: "😴",
+          title: "Your plant feels sleepy",
+          message: "Light is low. Try moving it closer to a window or turning on a grow light."
+        };
+      }
+
+      return {
+        id: "stressed",
+        emoji: "😬",
+        title: "Your plant feels a bit stressed",
+        message: "Conditions are outside the ideal range. Review the care tips below."
+      };
+    }
+
+    function updateMood(data){
+      if (!data) return;
+      const mood = getMoodFromData(data);
+
+      moodCard.classList.remove("mood-happy","mood-thirsty","mood-sleepy","mood-stressed");
+
+      moodEmojiEl.textContent = mood.emoji;
+      moodTitleEl.textContent = mood.title;
+      moodMessageEl.textContent = mood.message;
+      moodCard.classList.add("mood-" + mood.id);
+
+      moodCard.dataset.lastMoodId = mood.id;
+      moodCard.dataset.lastMoodTitle = mood.title;
+    }
+
+    /* ------------------ STATUS / ALERT HELPERS ------------------ */
+    function updateTime(){
+      const now = new Date();
+      lastUpdatedElement.textContent = now.toLocaleTimeString();
+    }
+
+    function checkAlerts(soilPct, lightPct){
+      const soilDry = soilPct < 30;
+      const lightLow = lightPct < 20;
+      soilAlert.style.display = soilDry ? 'block' : 'none';
+      lightAlert.style.display = lightLow ? 'block' : 'none';
+    }
+
+    /* ------------------ PLANT NAME CUSTOMIZATION ------------------ */
+    function getStorageKeyForPlantName() {
+      return activePlant ? `plantpulse_name_${activePlant.id}` : null;
+    }
+
+    function loadPlantName(){
+      if (!activePlant) return;
+      const key = getStorageKeyForPlantName();
+      const savedName = key ? localStorage.getItem(key) : null;
+      const nameToUse = savedName || activePlant.name;
+
+      plantNameInput.value = nameToUse;
+      document.getElementById('plant-title').innerHTML =
+        `<i class="fas fa-seedling"></i> ${nameToUse}`;
+    }
+
+    saveNameBtn.addEventListener('click', () => {
+      if (!activePlant) return;
+      const newName = plantNameInput.value.trim();
+      if (!newName) return;
+
+      const key = getStorageKeyForPlantName();
+      if (key) {
+        localStorage.setItem(key, newName);
+      }
+
+      document.getElementById('plant-title').innerHTML =
+        `<i class="fas fa-seedling"></i> ${newName}`;
+    });
+
+    /* ------------------ DAILY CHECK-IN ------------------ */
+    checkinBtn.addEventListener('click', () => {
+      if (!activePlant) return;
+
+      const now = new Date();
+      const time = now.toLocaleTimeString();
+      const plantName = plantNameInput.value.trim() || activePlant.name;
+
+      const moodId = moodCard.dataset.lastMoodId || "unknown";
+      const moodTitle = moodCard.dataset.lastMoodTitle || "I’m still waking up";
+
+      let reply = "";
+
+      if (moodId === "happy") {
+        reply = `${plantName}: "I’m feeling great right now! Thanks for taking such good care of me."`;
+      } else if (moodId === "thirsty") {
+        reply = `${plantName}: "I’m a bit thirsty… Could I get a drink soon?"`;
+      } else if (moodId === "sleepy") {
+        reply = `${plantName}: "I’m kind of sleepy. Maybe a little more light would help."`;
+      } else if (moodId === "stressed") {
+        reply = `${plantName}: "I’m a little overwhelmed. Check my moisture, light, and temperature, please."`;
+      } else {
+        reply = `${plantName}: "I’m still figuring out how I feel. Let’s check again after the next update."`;
+      }
+
+      checkinLog.textContent = `[${time}] ${reply}`;
+    });
+
+    /* ------------------ POLLING / DATA FETCHING ------------------ */
+    let timer = null;
+
+    function stopPolling(){
+      if(timer){
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    async function fetchData(){
+      if(!activePlant) return;
+
+      try{
+        [soilElement, lightElement, tempElement, humElement]
+          .forEach(el => el.classList.add('loading'));
+
+        let data;
+
+        if (activePlant.id === "demo") {
+          data = getDemoData();
+        } else {
+          const response = await fetch(activePlant.api, { cache: 'no-store' });
+          data = await response.json();
+        }
+
+        soilElement.textContent  = Number(data.soil_moisture).toFixed(0);
+        lightElement.textContent = Number(data.light_level).toFixed(0);
+        tempElement.textContent  = Number(data.temperature).toFixed(1);
+        humElement.textContent   = Number(data.humidity).toFixed(1);
+
+        [soilElement, lightElement, tempElement, humElement]
+          .forEach(el => el.classList.remove('loading'));
+
+        checkAlerts(data.soil_moisture, data.light_level);
+        updateCareTips(data);
+        updatePlantMessage(data);
+        updateMood(data);
+
+        connectionStatus.textContent = activePlant.id === "demo"
+          ? '🎭 Demo Mode: Using sample data'
+          : '✅ Connected';
+
+        connectionStatus.style.color = activePlant.id === "demo" ? '#555' : 'green';
+        updateTime();
+
+      } catch (err){
+        console.error('Error fetching data:', err);
+        connectionStatus.textContent = '❌ Connection Error';
+        connectionStatus.style.color = 'red';
+      }
+    }
+
+    function startPolling(){
+      fetchData();
+      stopPolling();
+      timer = setInterval(fetchData, 3000);
+      updateTime();
+    }
+  </script>
+</body>
+</html>
