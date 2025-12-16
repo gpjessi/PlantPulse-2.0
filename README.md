@@ -52,3 +52,6 @@ Sensors → ESP32 → Web Dashboard → User → Care Action
 - **Figma** — UI/UX design and diagrams  
 - **Google Docs** — reports, iteration plans, and project documentation  
 
+
+![PlantPulse Prototype](assets/imag/PlantPulse_Prototype.jpg)
+
