@@ -53,5 +53,7 @@ Sensors → ESP32 → Web Dashboard → User → Care Action
 - **Google Docs** — reports, iteration plans, and project documentation  
 
 
-![PlantPulse Prototype](assets/imag/PlantPulse_Prototype.jpg)
+<p align="center">
+  <img src="assets/img/PlantPulse_Prototype.jpeg" width="300" alt="PlantPulse Logo">
+</p>
 
