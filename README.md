@@ -54,6 +54,6 @@ Sensors → ESP32 → Web Dashboard → User → Care Action
 
 
 <p align="center">
-  <img src="assets/img/PlantPulse_Prototype.jpeg" width="300" alt="PlantPulse Logo">
+  <img src="assets/img/PlantPulse_Prototype.jpg" width="300" alt="PlantPulse Logo">
 </p>
 
